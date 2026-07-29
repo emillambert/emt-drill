@@ -66,3 +66,24 @@ The Supabase schema includes `study_materials` and `generated_items` so slides, 
 ## Disclaimer
 
 Educational practice only. Follow your instructor, textbook, and local protocols for patient care.
+
+## Live demo
+
+Temporary Cloudflare Workers URL (claim into your Cloudflare account to keep it):
+
+- App: https://emt-drill.small-flax.workers.dev
+- Claim account: https://dash.cloudflare.com/claim-preview?claimToken=Ykr85EuH9q2KpxPzwn1Q64UkMAxRnxleRjvEAxrtQBU
+
+Redeploy:
+
+```bash
+npm run build
+npx wrangler deploy --assets=./out --name=emt-drill
+```
+
+Or with an API token:
+
+```bash
+export CLOUDFLARE_API_TOKEN=...
+npm run deploy
+```

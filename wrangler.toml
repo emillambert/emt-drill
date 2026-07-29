@@ -1,0 +1,7 @@
+name = "emt-drill"
+compatibility_date = "2025-07-01"
+workers_dev = true
+
+[assets]
+directory = "./out"
+not_found_handling = "single-page-application"
