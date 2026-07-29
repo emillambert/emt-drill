@@ -21,15 +21,15 @@ export default function ProgressPage() {
           const row = accuracy[c.id];
           const pct = row?.pct ?? 0;
           return (
-            <div key={c.id} className="stat-row" style={{ display: "block" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div key={c.id} className="stat-row">
+              <div className="stat-top">
                 <span>{c.label}</span>
                 <strong>{row ? `${pct}%` : "—"}</strong>
               </div>
               <div className="bar-meter">
                 <span style={{ width: `${row ? pct : 0}%` }} />
               </div>
-              <div className="muted" style={{ fontSize: "0.8rem", marginTop: "0.2rem" }}>
+              <div className="muted" style={{ fontSize: "0.82rem", marginTop: "0.25rem" }}>
                 {row ? `${row.correct}/${row.total} decisions` : "No attempts yet"}
               </div>
             </div>
@@ -37,11 +37,11 @@ export default function ProgressPage() {
         })}
       </div>
 
-      <div className="panel">
+      <div className="panel quiet">
         <p className="kicker">Due for review</p>
         {due.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
-            Nothing due. Missed decisions will reappear here with spaced repetition.
+            Nothing due. Missed decisions come back here on a spaced schedule.
           </p>
         ) : (
           <ul className="list-check">
@@ -49,9 +49,8 @@ export default function ProgressPage() {
               <li key={r.conceptId} className="warn">
                 <div>{r.label}</div>
                 <Link
-                  href={`/scenario?id=${r.conceptId.split(":")[0]}`}
-                  className="muted"
-                  style={{ fontSize: "0.85rem", fontWeight: 600 }}
+                  href={`/scenario/?id=${r.conceptId.split(":")[0]}`}
+                  style={{ fontSize: "0.85rem", fontWeight: 700, marginTop: "0.25rem", display: "inline-block" }}
                 >
                   Retry · {categoryLabel(r.category as CategoryId)}
                 </Link>
@@ -61,7 +60,7 @@ export default function ProgressPage() {
         )}
       </div>
 
-      <div className="panel">
+      <div className="panel quiet">
         <p className="kicker">Recent mistakes</p>
         {mistakes.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>
@@ -72,7 +71,7 @@ export default function ProgressPage() {
             {mistakes.map((m, i) => (
               <li key={`${m.nodeId}-${i}`} className="bad">
                 <strong>{m.choiceText}</strong>
-                <div className="muted" style={{ marginTop: "0.25rem" }}>
+                <div className="muted" style={{ marginTop: "0.3rem" }}>
                   {m.feedback}
                 </div>
               </li>
@@ -82,10 +81,10 @@ export default function ProgressPage() {
       </div>
 
       <div className="nav-tabs">
-        <Link href="/scenario" className="btn btn-primary">
-          Drill scenarios
+        <Link href="/scenario/" className="btn btn-primary">
+          Calls
         </Link>
-        <Link href="/rapid?count=10" className="btn btn-secondary">
+        <Link href="/rapid/?count=10" className="btn btn-secondary">
           Quick 10
         </Link>
       </div>
@@ -95,7 +94,7 @@ export default function ProgressPage() {
         className="btn btn-ghost"
         style={{ marginTop: "1rem" }}
         onClick={() => {
-          if (confirm("Reset all local progress?")) reset();
+          if (confirm("Reset all local progress on this device?")) reset();
         }}
       >
         Reset local progress

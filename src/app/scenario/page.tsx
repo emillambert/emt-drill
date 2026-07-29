@@ -72,27 +72,27 @@ function ScenarioRunner({ scenario }: { scenario: Scenario }) {
 
   if (!finishedIntro) {
     return (
-      <AppShell title="Scenario" backHref="/">
+      <AppShell title="Call" backHref="/scenario/">
         <div className="panel scene-block" style={{ animation: "rise 0.45s ease-out both" }}>
           <p className="kicker">{categoryLabel(scenario.category)}</p>
           <h2 className="prompt" style={{ marginTop: 0 }}>
             {scenario.title}
           </h2>
           <p>
-            <strong>Dispatch:</strong> {scenario.dispatch}
+            <strong>Dispatch</strong> {scenario.dispatch}
           </p>
           <p>
-            <strong>Scene:</strong> {scenario.scene}
+            <strong>Scene</strong> {scenario.scene}
           </p>
           <p>
-            <strong>Presentation:</strong> {scenario.presentation}
+            <strong>Patient</strong> {scenario.presentation}
           </p>
           <VitalsStrip vitals={scenario.vitals} />
           <SourceBadge {...scenario.source} />
         </div>
-        <div className="stack" style={{ marginTop: "1rem" }}>
+        <div className="decision-footer">
           <button type="button" className="btn btn-primary" onClick={() => setFinishedIntro(true)}>
-            Begin decisions
+            Start decisions
           </button>
         </div>
       </AppShell>
@@ -107,48 +107,52 @@ function ScenarioRunner({ scenario }: { scenario: Scenario }) {
         : "bad";
 
   return (
-    <AppShell title="Scenario" backHref="/">
-      <ProgressBar current={Math.min(step, totalSteps)} total={totalSteps} />
-      <div className="panel">
-        {node.sceneUpdate ? (
-          <p className="muted" style={{ marginTop: 0 }}>
-            {node.sceneUpdate}
-          </p>
-        ) : null}
-        <VitalsStrip vitals={node.vitals ?? scenario.vitals} />
-        <h2 className="prompt">{node.prompt}</h2>
-        {!pending ? (
-          <div className="stack">
-            {node.options.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className="btn btn-option"
-                onClick={() => choose(opt)}
-              >
-                {opt.text}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <>
-            <div className={`feedback-toast ${feedbackClass}`}>
-              <strong>
-                {pending.quality === "best"
-                  ? "Correct priority"
-                  : pending.quality === "acceptable"
-                    ? "Acceptable"
-                    : pending.delayedCritical
-                      ? "Critical delay"
-                      : "Needs work"}
-              </strong>
-              <p style={{ margin: "0.35rem 0 0" }}>{pending.feedback}</p>
+    <AppShell title="Call" backHref="/scenario/">
+      <div className="decision-screen">
+        <ProgressBar current={Math.min(step, totalSteps)} total={totalSteps} />
+        <div className="panel quiet">
+          {node.sceneUpdate ? (
+            <p className="muted" style={{ marginTop: 0, marginBottom: "0.75rem" }}>
+              {node.sceneUpdate}
+            </p>
+          ) : null}
+          <VitalsStrip vitals={node.vitals ?? scenario.vitals} />
+          <h2 className="prompt">{node.prompt}</h2>
+          {!pending ? (
+            <div className="stack">
+              {node.options.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  className="btn btn-option"
+                  onClick={() => choose(opt)}
+                >
+                  {opt.text}
+                </button>
+              ))}
             </div>
-            <button type="button" className="btn btn-primary" onClick={advance}>
-              {pending.next === "end" ? "See review" : "Next decision"}
-            </button>
-          </>
-        )}
+          ) : (
+            <>
+              <div className={`feedback-toast ${feedbackClass}`}>
+                <strong>
+                  {pending.quality === "best"
+                    ? "Correct priority"
+                    : pending.quality === "acceptable"
+                      ? "Acceptable"
+                      : pending.delayedCritical
+                        ? "Critical delay"
+                        : "Needs work"}
+                </strong>
+                <p style={{ margin: "0.4rem 0 0" }}>{pending.feedback}</p>
+              </div>
+              <div className="decision-footer" style={{ marginTop: 0, paddingTop: 0 }}>
+                <button type="button" className="btn btn-primary" onClick={advance}>
+                  {pending.next === "end" ? "See debrief" : "Next decision"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </AppShell>
   );
@@ -187,38 +191,31 @@ function ScenarioPicker() {
   }
 
   return (
-    <AppShell title="Scenarios" backHref="/">
-      <div className="panel">
+    <AppShell title="Calls" backHref="/">
+      <div className="picker-head panel">
         <p className="kicker">{category ? categoryLabel(category as never) : "All categories"}</p>
         <h2 className="prompt" style={{ marginTop: 0 }}>
           Choose a call
         </h2>
-        <p className="muted" style={{ marginTop: 0 }}>
-          {list.length} scenarios · one decision per screen
+        <p className="picker-count" style={{ margin: 0 }}>
+          {list.length} scenarios · one decision at a time
         </p>
       </div>
       {starterId ? (
-        <div className="stack" style={{ marginTop: "0.85rem" }}>
+        <div className="stack" style={{ marginTop: "1rem" }}>
           <Link className="btn btn-primary" href={`/scenario/?id=${starterId}`}>
-            Start random{category ? ` · ${categoryLabel(category as never)}` : ""}
+            Random call
           </Link>
         </div>
       ) : null}
-      <div className="stack" style={{ marginTop: "0.85rem" }}>
+      <div className="call-list">
         {list.map((s) => (
-          <Link
-            key={s.id}
-            href={`/scenario/?id=${s.id}`}
-            className="btn btn-secondary"
-            style={{ justifyContent: "flex-start" }}
-          >
-            <span>
-              <strong>{s.title}</strong>
-              <br />
-              <span className="muted" style={{ fontWeight: 500, fontSize: "0.88rem" }}>
-                {categoryLabel(s.category)} · {s.difficulty}
-              </span>
-            </span>
+          <Link key={s.id} href={`/scenario/?id=${s.id}`} className="call-row">
+            <strong>{s.title}</strong>
+            <div className="call-meta">
+              <span>{categoryLabel(s.category)}</span>
+              <span>{s.difficulty}</span>
+            </div>
           </Link>
         ))}
       </div>

@@ -46,7 +46,7 @@ export default function SkillPage() {
 
   if (!ready) {
     return (
-      <AppShell title="Skill order" backHref="/">
+      <AppShell title="Skills" backHref="/">
         <p className="empty-state">Loading…</p>
       </AppShell>
     );
@@ -55,7 +55,7 @@ export default function SkillPage() {
   const current = deck[index];
   if (!current) {
     return (
-      <AppShell title="Skill order" backHref="/">
+      <AppShell title="Skills" backHref="/">
         <p className="empty-state">No skill drills available.</p>
       </AppShell>
     );
@@ -94,7 +94,7 @@ export default function SkillPage() {
   }
 
   return (
-    <AppShell title="Skill order" backHref="/">
+    <AppShell title="Skills" backHref="/">
       <ProgressBar current={index + 1} total={deck.length} />
       <div className="panel">
         <p className="kicker">{current.title}</p>
@@ -102,7 +102,7 @@ export default function SkillPage() {
           {current.prompt}
         </h2>
 
-        <p className="muted" style={{ fontWeight: 600 }}>
+        <p className="section-label" style={{ marginTop: "0.25rem" }}>
           Your sequence
         </p>
         {placed.length === 0 ? (
@@ -117,9 +117,7 @@ export default function SkillPage() {
 
         {!checked ? (
           <>
-            <p className="muted" style={{ fontWeight: 600, marginTop: "0.85rem" }}>
-              Available steps
-            </p>
+            <p className="section-label">Available steps</p>
             {pool.map((stepIndex) => (
               <button
                 key={`pool-${stepIndex}`}

@@ -18,9 +18,10 @@ export default function ReviewPage() {
 
   if (!payload) {
     return (
-      <AppShell title="Review" backHref="/">        <p className="empty-state">Complete a scenario to see your review.</p>
-        <Link href="/scenario" className="btn btn-primary">
-          Open scenarios
+      <AppShell title="Debrief" backHref="/">
+        <p className="empty-state">Finish a call to open your debrief.</p>
+        <Link href="/scenario/" className="btn btn-primary">
+          Open calls
         </Link>
       </AppShell>
     );
@@ -35,8 +36,8 @@ export default function ReviewPage() {
   );
 
   return (
-    <AppShell title="Review" backHref="/">
-      <div className="panel" style={{ textAlign: "center" }}>
+    <AppShell title="Debrief" backHref="/scenario/">
+      <div className="panel score-block">
         <p className="kicker">{title}</p>
         <div className="score-ring" style={{ ["--pct" as string]: attempt.scorePercent }}>
           <strong>{attempt.scorePercent}%</strong>
@@ -50,33 +51,33 @@ export default function ReviewPage() {
 
       <div className="panel">
         <p className="kicker">Correct sequence</p>
-        <ol className="list-check">
+        <ol className="list-check ordered">
           {correctSequence.map((step) => (
             <li key={step}>{step}</li>
           ))}
         </ol>
       </div>
 
-      <div className="panel">
-        <p className="kicker">Decisions you handled well</p>
+      <div className="panel quiet">
+        <p className="kicker">What you got right</p>
         {correct.length ? (
           <ul className="list-check">
             {correct.map((d) => (
               <li key={`${d.nodeId}-${d.optionId}`} className="good">
                 <strong>{d.choiceText}</strong>
-                <div className="muted" style={{ marginTop: "0.25rem", fontWeight: 500 }}>
+                <div className="muted" style={{ marginTop: "0.3rem", fontWeight: 500 }}>
                   {d.feedback}
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="muted">None this round — review the sequence above and try again.</p>
+          <p className="muted">None this round — walk the sequence above and run it again.</p>
         )}
       </div>
 
-      <div className="panel">
-        <p className="kicker">Mistakes & delays</p>
+      <div className="panel quiet">
+        <p className="kicker">Misses & delays</p>
         {mistakes.length ? (
           <ul className="list-check">
             {mistakes.map((d) => (
@@ -84,29 +85,32 @@ export default function ReviewPage() {
                 key={`${d.nodeId}-${d.optionId}-m`}
                 className={d.delayedCritical ? "warn" : "bad"}
               >
-                <strong>{d.delayedCritical ? "Delayed critical care: " : ""}{d.choiceText}</strong>
-                <div style={{ marginTop: "0.25rem" }}>{d.feedback}</div>
+                <strong>
+                  {d.delayedCritical ? "Delayed critical care — " : ""}
+                  {d.choiceText}
+                </strong>
+                <div style={{ marginTop: "0.3rem" }}>{d.feedback}</div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="muted">No major misses. Keep that priority order.</p>
+          <p className="muted">Clean priorities. Hold that order under pressure.</p>
         )}
       </div>
 
       <div className="takeaway">
-        <span className="kicker">Key takeaway</span>
+        <span className="kicker">Takeaway</span>
         <div>{keyTakeaway}</div>
       </div>
 
       <SourceBadge {...source} />
 
-      <div className="stack" style={{ marginTop: "1rem" }}>
-        <Link href="/scenario" className="btn btn-primary">
-          Next scenario
+      <div className="stack" style={{ marginTop: "1.25rem" }}>
+        <Link href="/scenario/" className="btn btn-primary">
+          Next call
         </Link>
-        <Link href="/progress" className="btn btn-secondary">
-          View progress
+        <Link href="/progress/" className="btn btn-secondary">
+          Progress
         </Link>
       </div>
     </AppShell>
