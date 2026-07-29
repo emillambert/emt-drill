@@ -14,10 +14,10 @@ export default function HomePage() {
   const attemptCount = progress.attempts.length;
   const continueHref =
     progress.continuePath?.mode === "rapid"
-      ? "/rapid"
+      ? "/rapid/"
       : progress.continuePath?.mode === "skill"
-        ? "/skill"
-        : "/scenario";
+        ? "/skill/"
+        : "/scenario/";
 
   return (
     <AppShell>
@@ -32,29 +32,29 @@ export default function HomePage() {
           <Link className="btn btn-primary" href={continueHref}>
             {attemptCount > 0 ? "Continue studying" : "Start a scenario"}
           </Link>
-          <Link className="btn btn-secondary" href="/rapid?count=10">
+          <Link className="btn btn-secondary" href="/rapid/?count=10">
             Quick 10-question session
           </Link>
-          <Link className="btn btn-secondary" href={weak[0] ? `/scenario?category=${weak[0]}` : "/progress"}>
+          <Link className="btn btn-secondary" href={weak[0] ? `/scenario/?category=${weak[0]}` : "/progress/"}>
             {weak[0] ? `Weak topics · ${categoryLabel(weak[0] as never)}` : "Weak topics"}
           </Link>
         </div>
       </section>
 
       <div className="mode-grid">
-        <Link href="/scenario" className="mode-card-link">
+        <Link href="/scenario/" className="mode-card-link">
           <h2>Scenarios</h2>
           <p>{allScenarios.length} branching calls focused on NREMT clinical competence.</p>
         </Link>
-        <Link href="/skill" className="mode-card-link">
+        <Link href="/skill/" className="mode-card-link">
           <h2>Skill order</h2>
           <p>Arrange assessment and treatment steps in the correct sequence.</p>
         </Link>
-        <Link href="/rapid" className="mode-card-link">
+        <Link href="/rapid/" className="mode-card-link">
           <h2>Rapid facts</h2>
           <p>Terminology, vitals ranges, contraindications, ops, and legal basics.</p>
         </Link>
-        <Link href="/progress" className="mode-card-link">
+        <Link href="/progress/" className="mode-card-link">
           <h2>Progress</h2>
           <p>
             {ready
@@ -75,7 +75,7 @@ export default function HomePage() {
         </p>
         <div className="chip-row">
           {CATEGORIES.map((c) => (
-            <Link key={c.id} href={`/scenario?category=${c.id}`} className="chip">
+            <Link key={c.id} href={`/scenario/?category=${c.id}`} className="chip">
               {c.short}
             </Link>
           ))}

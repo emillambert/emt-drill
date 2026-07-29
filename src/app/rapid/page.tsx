@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppShell, ProgressBar, SourceBadge } from "@/components/ui";
@@ -9,7 +9,12 @@ import { useProgress } from "@/components/ProgressProvider";
 import type { RapidQuestion } from "@/lib/types";
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5);
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 function RapidSession() {
@@ -18,19 +23,40 @@ function RapidSession() {
   const category = params.get("category") ?? undefined;
   const { recordRapid } = useProgress();
 
-  const deck = useMemo(() => {
-    const pool = category
+  const pool = useMemo(() => {
+    const base = category
       ? rapidQuestions.filter((q) => q.category === category)
       : rapidQuestions;
-    return shuffle(pool).slice(0, Math.min(count || 10, pool.length));
-  }, [category, count]);
+    return base;
+  }, [category]);
 
+  const [deck, setDeck] = useState<RapidQuestion[]>(() =>
+    pool.slice(0, Math.min(count || 10, pool.length)),
+  );
+  const [ready, setReady] = useState(false);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [done, setDone] = useState(false);
 
+  useEffect(() => {
+    setDeck(shuffle(pool).slice(0, Math.min(count || 10, pool.length)));
+    setIndex(0);
+    setSelected(null);
+    setCorrectCount(0);
+    setDone(false);
+    setReady(true);
+  }, [pool, count]);
+
   const q: RapidQuestion | undefined = deck[index];
+
+  if (!ready) {
+    return (
+      <AppShell title="Rapid facts" backHref="/">
+        <p className="empty-state">Loading…</p>
+      </AppShell>
+    );
+  }
 
   if (!q && !done) {
     return (
@@ -54,7 +80,7 @@ function RapidSession() {
           </p>
         </div>
         <div className="stack" style={{ marginTop: "1rem" }}>
-          <Link href="/rapid?count=10" className="btn btn-primary">
+          <Link href="/rapid/?count=10" className="btn btn-primary">
             Another 10
           </Link>
           <Link href="/" className="btn btn-secondary">
@@ -130,7 +156,13 @@ function RapidSession() {
 
 export default function RapidPage() {
   return (
-    <Suspense fallback={<AppShell title="Rapid" backHref="/"><p className="empty-state">Loading…</p></AppShell>}>
+    <Suspense
+      fallback={
+        <AppShell title="Rapid" backHref="/">
+          <p className="empty-state">Loading…</p>
+        </AppShell>
+      }
+    >
       <RapidSession />
     </Suspense>
   );

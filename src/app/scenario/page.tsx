@@ -1,11 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Suspense } from "react";
 import { AppShell, ProgressBar, SourceBadge, VitalsStrip } from "@/components/ui";
-import { allScenarios, getScenario, pickScenarios } from "@/data";
+import { allScenarios, getScenario, scenariosByCategory } from "@/data";
 import { getNode } from "@/lib/scenario-engine";
 import { scoreFromDecisions } from "@/lib/progress";
 import { categoryLabel } from "@/lib/categories";
@@ -63,7 +62,7 @@ function ScenarioRunner({ scenario }: { scenario: Scenario }) {
         explanations: nextDecisions,
       });
       setContinue({ mode: "scenario", id: scenario.id });
-      router.push("/review");
+      router.push("/review/");
       return;
     }
 
@@ -164,12 +163,16 @@ function ScenarioPicker() {
       const s = getScenario(id);
       return s ? [s] : [];
     }
-    return category
-      ? allScenarios.filter((s) => s.category === category)
-      : allScenarios;
+    return category ? scenariosByCategory(category) : allScenarios;
   }, [category, id]);
 
-  const starter = useMemo(() => pickScenarios(1, category)[0], [category]);
+  // Deterministic first item for SSR/hydration; randomize only after mount
+  const [starterId, setStarterId] = useState(list[0]?.id);
+  useEffect(() => {
+    if (!list.length) return;
+    const pick = list[Math.floor(Math.random() * list.length)];
+    setStarterId(pick.id);
+  }, [list]);
 
   if (id) {
     const scenario = getScenario(id);
@@ -185,7 +188,8 @@ function ScenarioPicker() {
 
   return (
     <AppShell title="Scenarios" backHref="/">
-      <div className="panel">        <p className="kicker">{category ? categoryLabel(category as never) : "All categories"}</p>
+      <div className="panel">
+        <p className="kicker">{category ? categoryLabel(category as never) : "All categories"}</p>
         <h2 className="prompt" style={{ marginTop: 0 }}>
           Choose a call
         </h2>
@@ -193,16 +197,21 @@ function ScenarioPicker() {
           {list.length} scenarios · one decision per screen
         </p>
       </div>
-      {starter ? (
+      {starterId ? (
         <div className="stack" style={{ marginTop: "0.85rem" }}>
-          <Link className="btn btn-primary" href={`/scenario?id=${starter.id}`}>
+          <Link className="btn btn-primary" href={`/scenario/?id=${starterId}`}>
             Start random{category ? ` · ${categoryLabel(category as never)}` : ""}
           </Link>
         </div>
       ) : null}
       <div className="stack" style={{ marginTop: "0.85rem" }}>
         {list.map((s) => (
-          <Link key={s.id} href={`/scenario?id=${s.id}`} className="btn btn-secondary" style={{ justifyContent: "flex-start" }}>
+          <Link
+            key={s.id}
+            href={`/scenario/?id=${s.id}`}
+            className="btn btn-secondary"
+            style={{ justifyContent: "flex-start" }}
+          >
             <span>
               <strong>{s.title}</strong>
               <br />
@@ -219,7 +228,13 @@ function ScenarioPicker() {
 
 export default function ScenarioPage() {
   return (
-    <Suspense fallback={<AppShell title="Scenario" backHref="/"><p className="empty-state">Loading…</p></AppShell>}>
+    <Suspense
+      fallback={
+        <AppShell title="Scenario" backHref="/">
+          <p className="empty-state">Loading…</p>
+        </AppShell>
+      }
+    >
       <ScenarioPicker />
     </Suspense>
   );

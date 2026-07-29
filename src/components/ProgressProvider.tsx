@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import {
   emptyProgress,
   loadProgress,
@@ -26,25 +26,41 @@ type ProgressApi = {
 
 const ProgressContext = createContext<ProgressApi | null>(null);
 
-function subscribe(cb: () => void) {
-  window.addEventListener("emt-drill-progress", cb);
-  window.addEventListener("storage", cb);
-  return () => {
-    window.removeEventListener("emt-drill-progress", cb);
-    window.removeEventListener("storage", cb);
-  };
+let cachedSnapshot: ProgressState = emptyProgress();
+let cacheInitialized = false;
+
+function readCachedProgress(): ProgressState {
+  if (typeof window === "undefined") return emptyProgress();
+  if (!cacheInitialized) {
+    cachedSnapshot = loadProgress();
+    cacheInitialized = true;
+  }
+  return cachedSnapshot;
 }
 
-function getSnapshot(): ProgressState {
-  return loadProgress();
+function writeAndCache(next: ProgressState): void {
+  cachedSnapshot = next;
+  cacheInitialized = true;
+  saveProgress(next);
+  window.dispatchEvent(new Event("emt-drill-progress"));
+}
+
+function subscribe(cb: () => void) {
+  const onChange = () => {
+    cachedSnapshot = loadProgress();
+    cacheInitialized = true;
+    cb();
+  };
+  window.addEventListener("emt-drill-progress", onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener("emt-drill-progress", onChange);
+    window.removeEventListener("storage", onChange);
+  };
 }
 
 function getServerSnapshot(): ProgressState {
   return emptyProgress();
-}
-
-function emit() {
-  window.dispatchEvent(new Event("emt-drill-progress"));
 }
 
 function useIsClient() {
@@ -56,61 +72,70 @@ function useIsClient() {
 }
 
 export function ProgressProvider({ children }: { children: ReactNode }) {
-  const progress = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const progress = useSyncExternalStore(subscribe, readCachedProgress, getServerSnapshot);
   const ready = useIsClient();
 
-  const api: ProgressApi = {
-    progress,
-    ready,
-    recordScenarioAttempt: (attempt) => {
-      const cur = loadProgress();
-      const next = upsertReviewFromAttempt(
-        {
-          ...cur,
-          attempts: [...cur.attempts, attempt].slice(-200),
-          lastSessionAt: attempt.completedAt,
-          continuePath: { mode: "scenario" },
-        },        attempt,
-      );
-      saveProgress(next);
-      emit();
-    },
-    recordRapid: (q, correct) => {
-      const cur = loadProgress();
-      saveProgress({
+  const recordScenarioAttempt = useCallback((attempt: ScenarioAttempt) => {
+    const cur = readCachedProgress();
+    const next = upsertReviewFromAttempt(
+      {
         ...cur,
-        rapidAttempts: [
-          ...cur.rapidAttempts,
-          { questionId: q.id, category: q.category, correct, at: new Date().toISOString() },
-        ].slice(-300),
-        lastSessionAt: new Date().toISOString(),
-        continuePath: { mode: "rapid" },
-      });
-      emit();
-    },
-    recordSkill: (item, correct) => {
-      const cur = loadProgress();
-      saveProgress({
-        ...cur,
-        skillAttempts: [
-          ...cur.skillAttempts,
-          { itemId: item.id, category: item.category, correct, at: new Date().toISOString() },
-        ].slice(-200),
-        lastSessionAt: new Date().toISOString(),
-        continuePath: { mode: "skill" },
-      });
-      emit();
-    },
-    setContinue: (path) => {
-      const cur = loadProgress();
-      saveProgress({ ...cur, continuePath: path });
-      emit();
-    },
-    reset: () => {
-      saveProgress(emptyProgress());
-      emit();
-    },
-  };
+        attempts: [...cur.attempts, attempt].slice(-200),
+        lastSessionAt: attempt.completedAt,
+        continuePath: { mode: "scenario" },
+      },
+      attempt,
+    );
+    writeAndCache(next);
+  }, []);
+
+  const recordRapid = useCallback((q: RapidQuestion, correct: boolean) => {
+    const cur = readCachedProgress();
+    writeAndCache({
+      ...cur,
+      rapidAttempts: [
+        ...cur.rapidAttempts,
+        { questionId: q.id, category: q.category, correct, at: new Date().toISOString() },
+      ].slice(-300),
+      lastSessionAt: new Date().toISOString(),
+      continuePath: { mode: "rapid" },
+    });
+  }, []);
+
+  const recordSkill = useCallback((item: SkillOrderItem, correct: boolean) => {
+    const cur = readCachedProgress();
+    writeAndCache({
+      ...cur,
+      skillAttempts: [
+        ...cur.skillAttempts,
+        { itemId: item.id, category: item.category, correct, at: new Date().toISOString() },
+      ].slice(-200),
+      lastSessionAt: new Date().toISOString(),
+      continuePath: { mode: "skill" },
+    });
+  }, []);
+
+  const setContinue = useCallback((path: ProgressState["continuePath"]) => {
+    const cur = readCachedProgress();
+    writeAndCache({ ...cur, continuePath: path });
+  }, []);
+
+  const reset = useCallback(() => {
+    writeAndCache(emptyProgress());
+  }, []);
+
+  const api = useMemo<ProgressApi>(
+    () => ({
+      progress,
+      ready,
+      recordScenarioAttempt,
+      recordRapid,
+      recordSkill,
+      setContinue,
+      reset,
+    }),
+    [progress, ready, recordScenarioAttempt, recordRapid, recordSkill, setContinue, reset],
+  );
 
   return <ProgressContext.Provider value={api}>{children}</ProgressContext.Provider>;
 }

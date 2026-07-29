@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell, ProgressBar, SourceBadge } from "@/components/ui";
 import { skillOrders } from "@/data/skill-orders";
@@ -8,20 +8,34 @@ import { useProgress } from "@/components/ProgressProvider";
 import type { SkillOrderItem } from "@/lib/types";
 
 function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5);
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
 }
 
 export default function SkillPage() {
   const { recordSkill } = useProgress();
-  const deck = useMemo(() => shuffle(skillOrders), []);
+  const [deck, setDeck] = useState<SkillOrderItem[]>(skillOrders);
   const [index, setIndex] = useState(0);
-  const item = deck[index] as SkillOrderItem | undefined;
-  const [pool, setPool] = useState<number[]>(() =>
-    item ? shuffle(item.steps.map((_, i) => i)) : [],
-  );
+  const [pool, setPool] = useState<number[]>([]);
   const [placed, setPlaced] = useState<number[]>([]);
   const [checked, setChecked] = useState(false);
   const [correct, setCorrect] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const nextDeck = shuffle(skillOrders);
+    setDeck(nextDeck);
+    setIndex(0);
+    setPool(shuffle(nextDeck[0].steps.map((_, i) => i)));
+    setPlaced([]);
+    setChecked(false);
+    setCorrect(false);
+    setReady(true);
+  }, []);
 
   function resetFor(next: SkillOrderItem) {
     setPool(shuffle(next.steps.map((_, i) => i)));
@@ -30,15 +44,22 @@ export default function SkillPage() {
     setCorrect(false);
   }
 
-  if (!item) {
+  if (!ready) {
+    return (
+      <AppShell title="Skill order" backHref="/">
+        <p className="empty-state">Loading…</p>
+      </AppShell>
+    );
+  }
+
+  const current = deck[index];
+  if (!current) {
     return (
       <AppShell title="Skill order" backHref="/">
         <p className="empty-state">No skill drills available.</p>
       </AppShell>
     );
   }
-
-  const current = item;
 
   function pickFromPool(stepIndex: number) {
     if (checked) return;

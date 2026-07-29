@@ -28,9 +28,7 @@ export function scenariosByCategory(category: string): Scenario[] {
 }
 
 export function pickScenarios(count: number, category?: string): Scenario[] {
-  const pool = category
-    ? scenariosByCategory(category)
-    : [...allScenarios];
-  const shuffled = pool.sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(count, shuffled.length));
+  const pool = [...(category ? scenariosByCategory(category) : allScenarios)];
+  // Deterministic order — callers that want random should shuffle after mount
+  return pool.slice(0, Math.min(count, pool.length));
 }
