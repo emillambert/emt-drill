@@ -1,30 +1,30 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans, Fraunces } from "next/font/google";
+import { Barlow_Condensed, Source_Sans_3 } from "next/font/google";
 import { ProgressProvider } from "@/components/ProgressProvider";
 import "./globals.css";
 
-const body = IBM_Plex_Sans({
+const body = Source_Sans_3({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
 });
 
-const display = Fraunces({
+const display = Barlow_Condensed({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["600", "700"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "EMT Drill",
   description:
-    "Scenario-based EMT practice for clinical decisions, assessment sequencing, and NREMT-style reasoning.",
+    "Scenario practice for EMT students — priority decisions, assessment sequencing, NREMT-style reasoning.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#e8f0f2",
+  themeColor: "#e7ebe8",
 };
 
 export default function RootLayout({

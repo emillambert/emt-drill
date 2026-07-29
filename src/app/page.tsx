@@ -20,67 +20,72 @@ export default function HomePage() {
         : "/scenario/";
 
   return (
-    <AppShell>
+    <AppShell home>
       <section className="hero-home">
-        <p className="kicker">Clinical decision practice</p>
         <h1 className="brand-hero">EMT Drill</h1>
         <p className="hero-copy">
-          Short calls. One decision at a time. Learn priority order the way the field demands it.
+          One call at a time. Pick the next action. Learn the priority order.
         </p>
-
-        <div className="stack">
+        <div className="hero-actions">
           <Link className="btn btn-primary" href={continueHref}>
-            {attemptCount > 0 ? "Continue studying" : "Start a scenario"}
-          </Link>
-          <Link className="btn btn-secondary" href="/rapid/?count=10">
-            Quick 10-question session
-          </Link>
-          <Link className="btn btn-secondary" href={weak[0] ? `/scenario/?category=${weak[0]}` : "/progress/"}>
-            {weak[0] ? `Weak topics · ${categoryLabel(weak[0] as never)}` : "Weak topics"}
+            {attemptCount > 0 ? "Continue" : "Begin a call"}
           </Link>
         </div>
       </section>
 
-      <div className="mode-grid">
-        <Link href="/scenario/" className="mode-card-link">
-          <h2>Scenarios</h2>
-          <p>{allScenarios.length} branching calls focused on NREMT clinical competence.</p>
-        </Link>
-        <Link href="/skill/" className="mode-card-link">
-          <h2>Skill order</h2>
-          <p>Arrange assessment and treatment steps in the correct sequence.</p>
-        </Link>
-        <Link href="/rapid/" className="mode-card-link">
-          <h2>Rapid facts</h2>
-          <p>Terminology, vitals ranges, contraindications, ops, and legal basics.</p>
-        </Link>
-        <Link href="/progress/" className="mode-card-link">
-          <h2>Progress</h2>
-          <p>
-            {ready
-              ? due.length
-                ? `${due.length} concepts due for review`
-                : "Accuracy by topic and recent mistakes"
-              : "Loading…"}
-          </p>
-        </Link>
-      </div>
+      <section className="below-fold">
+        <p className="section-label">Modes</p>
+        <ul className="mode-list">
+          <li>
+            <Link href="/scenario/">
+              <strong>Scenarios</strong>
+              <em>{allScenarios.length}</em>
+              <span>Branching calls. One decision per screen.</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/skill/">
+              <strong>Skill order</strong>
+              <em>Sequence</em>
+              <span>Put assessment and treatment steps in order.</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/rapid/?count=10">
+              <strong>Rapid facts</strong>
+              <em>10 Q</em>
+              <span>Terms, vitals ranges, contraindications, ops, legal.</span>
+            </Link>
+          </li>
+          <li>
+            <Link href="/progress/">
+              <strong>Progress</strong>
+              <em>{ready && due.length ? `${due.length} due` : "Track"}</em>
+              <span>
+                {ready
+                  ? weak[0]
+                    ? `Weakest now: ${categoryLabel(weak[0] as never)}`
+                    : "Accuracy by topic and recent misses"
+                  : "Loads on this device"}
+              </span>
+            </Link>
+          </li>
+        </ul>
 
-      <div className="panel" style={{ marginTop: "1.25rem" }}>
-        <p className="kicker">V1 focus</p>
-        <p style={{ margin: 0, lineHeight: 1.45 }}>
-          Built for <strong>NREMT-style clinical decisions</strong> and patient-assessment sequencing—not
-          flashcard memorization. Medication doses and agency procedures stay labeled as national
-          curriculum vs local protocol.
-        </p>
-        <div className="chip-row">
+        <p className="section-label">Topics</p>
+        <div className="topic-list">
           {CATEGORIES.map((c) => (
-            <Link key={c.id} href={`/scenario/?category=${c.id}`} className="chip">
-              {c.short}
+            <Link key={c.id} href={`/scenario/?category=${c.id}`}>
+              {c.label}
             </Link>
           ))}
         </div>
-      </div>
+
+        <p className="note-block">
+          Built around NREMT-style decisions and patient assessment — not flashcards.
+          National curriculum vs local protocol is labeled. No invented drug doses.
+        </p>
+      </section>
     </AppShell>
   );
 }

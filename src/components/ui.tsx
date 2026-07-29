@@ -4,27 +4,43 @@ export function AppShell({
   children,
   title,
   backHref,
+  home = false,
 }: {
   children: React.ReactNode;
   title?: string;
   backHref?: string;
+  home?: boolean;
 }) {
   return (
     <div className="app-shell">
-      <header className="app-header">
+      <header className={`app-header${home ? " home-header" : ""}`}>
         <div className="app-header-inner">
-          {backHref ? (
-            <Link href={backHref} className="back-link" aria-label="Back">
-              ← Back
-            </Link>
+          {home ? (
+            <>
+              <span />
+              <span />
+              <span className="header-spacer" />
+            </>
+          ) : backHref ? (
+            <>
+              <Link href={backHref} className="back-link" aria-label="Back">
+                ← Back
+              </Link>
+              {title ? <h1 className="screen-title">{title}</h1> : <span />}
+              <span className="header-spacer" />
+            </>
           ) : (
-            <span className="brand-mark">EMT Drill</span>
+            <>
+              <Link href="/" className="brand-mark">
+                EMT Drill
+              </Link>
+              {title ? <h1 className="screen-title">{title}</h1> : <span />}
+              <span className="header-spacer" />
+            </>
           )}
-          {title ? <h1 className="screen-title">{title}</h1> : <span />}
-          <span className="header-spacer" />
         </div>
       </header>
-      <main className="app-main">{children}</main>
+      <main className={`app-main${home ? " home-main" : ""}`}>{children}</main>
     </div>
   );
 }
@@ -52,7 +68,9 @@ export function SourceBadge({
 }) {
   return (
     <div className={`source-badge scope-${scope}`}>
-      <span className="source-scope">{scope === "national" ? "National curriculum" : "Local protocol"}</span>
+      <span className="source-scope">
+        {scope === "national" ? "National curriculum" : "Local protocol"}
+      </span>
       <span className="source-label">{label}</span>
       {note ? <span className="source-note">{note}</span> : null}
     </div>
